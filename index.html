@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>質感流光單字卡</title>
+    <title>極簡白銀流光單字卡</title>
     <style>
-        /* 定義全局變數，色彩會由 JS 動態替換 */
+        /* 全局變數設定為極簡白色系 */
         :root {
             --bg-color: #0d0d12;
             --text-color: #ffffff;
-            --theme-light: #00ffff; /* 預設青藍色 */
-            --theme-dark: #0055ff;
+            --theme-light: #ffffff; 
+            --theme-dark: #666666;
         }
         
         * {
@@ -24,8 +24,6 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            /* 讓背景顏色切換時有平滑過渡感 */
-            transition: background-color 0.5s ease;
         }
 
         /* --- 頂部滑動字母區 --- */
@@ -36,7 +34,6 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             z-index: 100;
-            /* 加大上下 padding，確保放大後的字母不會被切到 */
             padding: 35px 0 25px 0; 
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             width: 100%;
@@ -69,14 +66,13 @@
             user-select: none;
         }
         
-        /* 中間字母放大凸出，並套用當前主題色 */
+        /* 中間字母放大凸出，純白發光 */
         .letter.active {
             transform: scale(1.6) translateY(-2px);
             color: var(--theme-light);
-            text-shadow: 0 0 12px var(--theme-light);
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
         }
 
-        /* 空白區塊，用來讓第一個和最後一個字母能滑到畫面正中間 */
         .spacer {
             flex: 0 0 auto;
             width: calc(50vw - 30px);
@@ -91,18 +87,16 @@
             padding-bottom: 60px;
         }
 
-        /* 單色流光外框 */
+        /* 白銀流光外框 */
         .rgb-wrapper {
             position: relative;
             border-radius: 16px;
-            /* 邊框變細一點，看起來更精緻不刺眼 */
             padding: 2px; 
-            /* 單色漸層流光，搭配深灰色製造轉動感 */
+            /* 純白與深灰交錯的漸層流光 */
             background: linear-gradient(60deg, var(--theme-light), #1e1e26, var(--theme-dark), #1e1e26);
             background-size: 300% 300%;
             animation: single-glow 4s ease infinite;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            transition: background 0.5s ease;
         }
         @keyframes single-glow {
             0% { background-position: 0% 50%; }
@@ -138,7 +132,7 @@
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
             border-radius: 14px;
-            background: #15151c; /* 高級深色背板 */
+            background: #15151c;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -151,8 +145,7 @@
             font-weight: 800;
             letter-spacing: 5px;
             color: var(--theme-light);
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
-            transition: color 0.5s ease;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
         }
         .tap-hint {
             font-size: 11px;
@@ -178,13 +171,12 @@
             gap: 12px;
         }
         .word-pos {
-            color: var(--theme-light);
+            color: #fff;
             font-size: 13px;
             font-weight: bold;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.15);
             padding: 4px 10px;
             border-radius: 6px;
-            transition: color 0.5s ease;
         }
         .word-trans {
             color: #bbb;
@@ -292,23 +284,6 @@
             ]
         };
 
-        // 幫每個字母設定專屬的顏色 (Light色, Dark色)
-        const colorPalette = {
-            "A": ["#00e5ff", "#0055aa"], // 科技青藍
-            "C": ["#ff007f", "#aa0044"], // 霓虹紫紅
-            "D": ["#00ff66", "#008822"], // 駭客螢光綠
-            "E": ["#ffaa00", "#cc4400"], // 電競橘黃
-            "F": ["#b266ff", "#5500aa"], // 神秘紫
-            "H": ["#ff3333", "#aa0000"], // 警戒紅
-            "I": ["#00ffff", "#0088ff"], // 冰川藍
-            "O": ["#ff00ff", "#880088"], // 賽博龐克紫
-            "P": ["#ffcc00", "#aa8800"], // 黃金流光
-            "R": ["#aaff00", "#55aa00"], // 萊姆綠
-            "S": ["#ff5588", "#aa2255"], // 櫻花粉
-            "T": ["#55aaff", "#2255aa"], // 天空藍
-            "W": ["#eeeeee", "#666666"]  // 金屬白銀
-        };
-
         const carousel = document.getElementById('carousel');
         const wordListContainer = document.getElementById('wordList');
         const availableLetters = Object.keys(vocabData);
@@ -400,13 +375,6 @@
                 closestLetter.classList.add('active');
                 
                 const letterVal = closestLetter.dataset.letter;
-                
-                // 動態替換主題色
-                if (colorPalette[letterVal]) {
-                    document.documentElement.style.setProperty('--theme-light', colorPalette[letterVal][0]);
-                    document.documentElement.style.setProperty('--theme-dark', colorPalette[letterVal][1]);
-                }
-
                 renderWords(letterVal);
             }
         }
