@@ -1,1 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Z 翻轉單字卡</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #fff;
+            --card-front-bg: #eef2f5;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        /* 頂部 A-Z 滑動導覽列 */
+        .nav-wrapper {
+            position: sticky;
+            top: 0;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            padding: 10px 15px;
+        }
+        .nav-scroll {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            gap: 10px;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .nav-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .letter-btn {
+            padding: 8px 18px;
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .letter-btn:active {
+            transform: scale(0.95);
+        }
+        .letter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+        }
 
+        /* 下方區塊 */
+        .content-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .current-letter-title {
+            font-size: 24px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        /* 翻轉字卡 (3D效果) */
+        .word-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .flip-card {
+            background-color: transparent;
+            height: 150px;
+            perspective: 1000px; /* 3D 深度 */
+            cursor: pointer;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        /* 點擊後觸發翻轉 */
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        /* 正面：提示字元 */
+        .flip-card-front {
+            background-color: var(--card-front-bg);
+            border: 2px dashed #bdc3c7;
+        }
+        .hint-text {
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--primary-color);
+            letter-spacing: 4px;
+        }
+        .click-hint {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 15px;
+        }
+
+        /* 背面：完整答案 */
+        .flip-card-back {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transform: rotateY(180deg);
+            border: 2px solid var(--primary-color);
+        }
+        .word-title {
+            font-size: 26px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .word-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .word-pos {
+            color: #e67e22;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: #fef5e7;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .word-trans {
+            color: #555;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 頂部 A-Z 滑動區 -->
+<div class="nav-wrapper">
+    <div class="nav-scroll" id="navScroll"></div>
+</div>
+
+<!-- 下方翻轉字卡區 -->
+<div class="content-container">
+    <div class="current-letter-title" id="currentLetter">A</div>
+    <div class="word-list" id="wordList"></div>
+</div>
+
+<script>
+    // 單字資料
+    const vocabData = {
+        "A": [
+            { word: "achieve", pos: "v.", trans: "達成" },
+            { word: "achievement", pos: "n.", trans: "成就" },
+            { word: "adopt", pos: "v.", trans: "採納；收養" },
+            { word: "annoy", pos: "v.", trans: "使人生氣" },
+            { word: "attitude", pos: "n.", trans: "態度" }
+        ],
+        "C": [
+            { word: "career", pos: "n.", trans: "事業" },
+            { word: "challenge", pos: "n./v.", trans: "挑戰" },
+            { word: "consistent", pos: "adj.", trans: "始終如一的" },
+            { word: "consistently", pos: "adv.", trans: "持續地" },
+            { word: "continue", pos: "v.", trans: "繼續" },
+            { word: "continuous", pos: "adj.", trans: "持續不斷的" },
+            { word: "control", pos: "v./n.", trans: "控制" },
+            { word: "convey", pos: "v.", trans: "傳達" }
+        ],
+        "D": [
+            { word: "dare", pos: "v.", trans: "敢" },
+            { word: "deliver", pos: "v.", trans: "傳達；遞送" },
+            { word: "delivery", pos: "n.", trans: "遞送" },
+            { word: "disadvantage", pos: "n.", trans: "不利條件" }
+        ],
+        "E": [
+            { word: "educate", pos: "v.", trans: "教育" },
+            { word: "education", pos: "n.", trans: "教育" },
+            { word: "educational", pos: "adj.", trans: "教育的" },
+            { word: "ensure", pos: "v.", trans: "確保" },
+            { word: "entertain", pos: "v.", trans: "娛樂" },
+            { word: "entertainment", pos: "n.", trans: "娛樂" },
+            { word: "equal", pos: "adj./v.", trans: "相等的；等於" },
+            { word: "equality", pos: "n.", trans: "平等" },
+            { word: "establish", pos: "v.", trans: "建立" },
+            { word: "establishment", pos: "n.", trans: "建立" },
+            { word: "extreme", pos: "adj.", trans: "極端的" }
+        ],
+        "F": [
+            { word: "female", pos: "adj./n.", trans: "女性的；女性" },
+            { word: "forbid", pos: "v.", trans: "禁止" },
+            { word: "fulfill", pos: "v.", trans: "實現" }
+        ],
+        "H": [
+            { word: "hardship", pos: "n.", trans: "艱難" },
+            { word: "honor", pos: "n./v.", trans: "榮譽；向...致敬" },
+            { word: "honorable", pos: "adj.", trans: "值得敬佩的" }
+        ],
+        "I": [
+            { word: "imaginary", pos: "adj.", trans: "想像的" },
+            { word: "imagination", pos: "n.", trans: "想像力" },
+            { word: "imaginative", pos: "adj.", trans: "有想像力的" },
+            { word: "imagine", pos: "v.", trans: "想像" }
+        ],
+        "O": [
+            { word: "obstacle", pos: "n.", trans: "障礙" },
+            { word: "overcome", pos: "v.", trans: "克服" }
+        ],
+        "P": [
+            { word: "parade", pos: "n.", trans: "遊行" },
+            { word: "passion", pos: "n.", trans: "熱愛" },
+            { word: "passionate", pos: "adj.", trans: "熱情的" },
+            { word: "persuade", pos: "v.", trans: "說服" },
+            { word: "persuasion", pos: "n.", trans: "說服" },
+            { word: "persuasive", pos: "adj.", trans: "有說服力的" },
+            { word: "policy", pos: "n.", trans: "政策" },
+            { word: "poverty", pos: "n.", trans: "貧窮" },
+            { word: "principal", pos: "n./adj.", trans: "校長；主要的" }
+        ],
+        "R": [
+            { word: "recover", pos: "v.", trans: "康復" },
+            { word: "recovery", pos: "n.", trans: "恢復" },
+            { word: "region", pos: "n.", trans: "地區" },
+            { word: "regional", pos: "adj.", trans: "地區的" },
+            { word: "request", pos: "n./v.", trans: "要求" },
+            { word: "rescue", pos: "v./n.", trans: "解救" }
+        ],
+        "S": [
+            { word: "sign", pos: "v.", trans: "簽名" },
+            { word: "surgery", pos: "n.", trans: "外科手術" }
+        ],
+        "T": [
+            { word: "threat", pos: "n.", trans: "威脅" },
+            { word: "threaten", pos: "v.", trans: "威脅" }
+        ],
+        "W": [
+            { word: "weapon", pos: "n.", trans: "手段；武器" },
+            { word: "weave", pos: "v.", trans: "編織" }
+        ]
+    };
+
+    const navScroll = document.getElementById('navScroll');
+    const currentLetterTitle = document.getElementById('currentLetter');
+    const wordListContainer = document.getElementById('wordList');
+
+    const availableLetters = Object.keys(vocabData);
+
+    // 生成上方導覽列
+    function renderNav() {
+        availableLetters.forEach((letter, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'letter-btn';
+            btn.textContent = letter;
+            
+            if (index === 0) btn.classList.add('active');
+
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderWords(letter);
+            });
+
+            navScroll.appendChild(btn);
+        });
+    }
+
+    // 生成單字卡片
+    function renderWords(letter) {
+        currentLetterTitle.textContent = letter + " 開頭單字";
+        wordListContainer.innerHTML = '';
+
+        const words = vocabData[letter];
+        words.forEach(item => {
+            // 自動計算字首和字尾，並把中間挖空變成底線
+            const wordStr = item.word;
+            let hint = wordStr;
+            if (wordStr.length > 2) {
+                // 例如 achieve (長度7) -> a + 5個底線 + e -> a _ _ _ _ _ e
+                const underscores = Array(wordStr.length - 2).fill('_').join(' ');
+                hint = `${wordStr[0]} ${underscores} ${wordStr[wordStr.length - 1]}`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'flip-card';
+            // 卡片的正反面結構
+            card.innerHTML = `
+                <div class="flip-card-inner">
+                    <!-- 正面 -->
+                    <div class="flip-card-front">
+                        <div class="hint-text">${hint}</div>
+                        <div class="click-hint">👆 點擊看答案</div>
+                    </div>
+                    <!-- 背面 -->
+                    <div class="flip-card-back">
+                        <div class="word-title">${item.word}</div>
+                        <div class="word-details">
+                            <span class="word-pos">${item.pos}</span>
+                            <span class="word-trans">${item.trans}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 加入點擊翻轉事件
+            card.addEventListener('click', () => {
+                card.classList.toggle('flipped');
+            });
+
+            wordListContainer.appendChild(card);
+        });
+    }
+
+    // 啟動
+    renderNav();
+    if (availableLetters.length > 0) {
+        renderWords(availableLetters[0]);
+    }
+</script>
+
+</body>
+</html>
